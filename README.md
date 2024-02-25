@@ -6,9 +6,9 @@ This repository proposes several methods for finding the fastest path between tw
 
 ## 📝 Modelling the problem :
 
-1) Wikipedia is first modelled as a directed graph where each node is an article. The neighbours of a node are the other Wikipedia pages mentioned in that node in the form of hyperlinks. 
+1) The first step is to model wikipedia articles database as a directed graph where each node is an article. The neighbours of a node are the other Wikipedia pages mentioned in that node in the form of hyperlinks. 
 
-A path between two pages is therefore a succession of wikipedia articles where articles with index k are referenced in articles with index k-1 as hyperlinks.
+A path is therefore a succession of wikipedia articles where articles with index k are referenced in articles with index k-1 as hyperlinks.
 
 2) We then find the set of paths between the start_node and the end_node of our choice (of length less than an integer k that we have chosen) using the Depth-First-Search algorithm.
 
