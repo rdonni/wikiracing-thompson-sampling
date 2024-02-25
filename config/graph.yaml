@@ -1,0 +1,4 @@
+start_node: 'Thompson sampling'
+max_num_nodes: 1000
+max_workers: 11
+graph_path: './graph.json'

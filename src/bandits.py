@@ -97,9 +97,9 @@ class MultiArmedBandit:
             self.epsilon = epsilon
 
     def run_one_iteration(self):
-        if 'thompson' in self.name:
+        if 'thompson-sampling' in self.name:
             self.run_one_iteration_thompson_sampling()
-        elif 'epsilon_greedy' in self.name:
+        elif 'epsilon-greedy' in self.name:
             self.run_one_iteration_epsilon_greedy()
         elif 'ucb' in self.name:
             self.run_one_iteration_ucb()

@@ -26,7 +26,7 @@ def build_graph(start_node: str, max_graph_nodes: int, max_workers: int) -> dict
     return graph
 
 
-def extract_linked_pages(article_title, language='en'):
+def extract_linked_pages(article_title: str, language: str = 'en'):
     site = pywikibot.Site(language, 'wikipedia')
     page = pywikibot.Page(site, article_title)
     linked_pages = page.linkedPages()
@@ -43,7 +43,7 @@ def remove_unknown_neighbors_nodes(graph):
     return pruned_graph
 
 
-def save_graph(graph, file_path) -> None:
+def save_graph(graph, file_path: str) -> None:
     with open(file_path, "w") as outfile:
         json.dump(graph, outfile)
 

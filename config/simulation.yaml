@@ -1,0 +1,21 @@
+graph_path: ./graph.json
+path_max_depth: 3
+
+start_node: Thompson sampling
+end_node: Albert Einstein
+
+num_iters: 400
+eval_iters: 100
+plots_path: ./plots
+results_path: ./results
+show_plots: False
+
+algorithms:
+  - name: thompson-sampling
+    initial_parameters: [500, 0, 1, 1000]
+
+  - name: ucb-1
+    confidence_level: 1
+
+  - name: epsilon-greedy-0.05
+    epsilon: 0.05
