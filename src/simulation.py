@@ -1,10 +1,10 @@
 import os
-import time
 
 import numpy as np
 import plotly.graph_objs as go
 from tqdm import tqdm
 import json
+
 
 class Simulation:
     def __init__(self, mabs, nb_iterations, eval_iterations, results_path, plots_path, show_plots):
@@ -21,7 +21,6 @@ class Simulation:
         for i in tqdm(range(self.nb_iterations)):
             for mab in self.mabs:
                 mab.run_one_iteration()
-                time.sleep(0.2)
             self.n_iter += 1
             if i % self.eval_iterations == self.eval_iterations - 1:
                 for mab in self.mabs:
@@ -30,7 +29,7 @@ class Simulation:
 
         if not os.path.exists(self.results_path):
             os.mkdir(self.results_path)
-        results = {mab.name: mab.latencies for mab in self.mabs}
+        results = {mab.name: list(mab.latencies) for mab in self.mabs}
         with open(f"{self.results_path}/results.json", "w") as results_path:
             json.dump(results, results_path)
 

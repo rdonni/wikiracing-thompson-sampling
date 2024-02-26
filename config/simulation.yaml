@@ -1,21 +1,50 @@
+use_synthetic_distributions: True
+
 graph_path: ./graph.json
 path_max_depth: 3
 
 start_node: Thompson sampling
 end_node: Albert Einstein
 
-num_iters: 400
-eval_iters: 100
+num_iters: 1000
+eval_iters: 20
 plots_path: ./plots
 results_path: ./results
 show_plots: False
 
 algorithms:
-  - name: thompson-sampling
-    initial_parameters: [500, 0, 1, 1000]
+  #- name: thompson-sampling
+  #  initial_parameters: [300, 3, 1, 100]
+
+  #- name: thompson-sampling-2
+  #  initial_parameters: [300, 10, 1, 1000]
+
+  #- name: thompson-sampling-3
+  #  initial_parameters: [300, 10, 1, 10000]
+
+  - name: thompson-sampling-4-[0, 0, 1, 1000]
+    initial_parameters: [0, 0, 1, 1000]
+
+  - name: thompson-sampling-5-[ 0, 0, 1, 100]
+    initial_parameters: [ 0, 0, 1, 100]
+
+  #- name: thompson-sampling-6
+  #  initial_parameters: [ 300, 10, 1, 1 ]
+
+  - name: thompson-sampling-7-[ 0, 0, 1, 10]
+    initial_parameters: [ 0, 0, 1, 10]
+
+  - name: thompson-sampling-8-[ 0, 0, 10, 1000]
+    initial_parameters: [ 0, 0, 10, 1000 ]
+
+  - name: thompson-sampling-9-[ 0, 0, 1, 1]
+    initial_parameters: [ 0, 0, 1, 1 ]
 
   - name: ucb-1
     confidence_level: 1
+
+  - name: ucb-2
+    confidence_level: 2
 
   - name: epsilon-greedy-0.05
     epsilon: 0.05
