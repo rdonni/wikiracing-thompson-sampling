@@ -35,7 +35,7 @@ class GaussianTSArm(WikipediaArm):
         if precision == 0 or self.v == 0:
             precision = 0.001
 
-        estimated_variance = 1 / precision
+        estimated_variance = (1 / precision)
         sample = np.random.normal(self.μ, np.sqrt(estimated_variance))
         return sample
 

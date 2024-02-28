@@ -1,9 +1,9 @@
+import json
 import os
 
 import numpy as np
 import plotly.graph_objs as go
 from tqdm import tqdm
-import json
 
 
 class Simulation:
@@ -35,16 +35,26 @@ class Simulation:
 
     def generate_plots(self, show=True):
         fig = go.Figure()
-
         for mab in self.mabs:
             fig.add_trace(go.Scatter(x=list(range(len(mab.latencies))),
-                                     y=np.cumsum(mab.latencies), #/ (np.arange(len(mab.latencies)) + 1),
+                                     y=np.cumsum(mab.latencies),
                                      mode='lines',
                                      name=mab.name))
-
-        fig.update_layout(title_text=f"Cumulative latency at iteration : {self.n_iter}")
+        fig.update_layout(title_text=f"Cumulative loading time at iteration : {self.n_iter}")
         if show:
             fig.show()
+
+        fig_2 = go.Figure()
+        for mab in self.mabs:
+            fig_2.add_trace(go.Scatter(x=list(range(len(mab.latencies))),
+                                       y=np.cumsum(mab.latencies) / (np.arange(len(mab.latencies)) + 1),
+                                       mode='lines',
+                                       name=mab.name))
+        fig_2.update_layout(title_text=f"Average loading time at iteration : {self.n_iter}")
+        if show:
+            fig_2.show()
+
         if not os.path.exists(self.plots_path):
             os.mkdir(self.plots_path)
-        fig.write_image(f"{self.plots_path}/iteration_{self.n_iter}.png")
+        fig.write_image(f"{self.plots_path}/cumulative_{self.n_iter}.png", scale=3)
+        fig_2.write_image(f"{self.plots_path}/average_{self.n_iter}.png", scale=3)

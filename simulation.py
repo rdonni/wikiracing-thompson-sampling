@@ -23,7 +23,7 @@ def main(cfg: DictConfig) -> None:
     if cfg.use_synthetic_distributions:
         # We model the average loading time of each path by a normal variable
         synthetic_means = np.random.uniform(500, 1500, len(paths))
-        synthetic_stds = np.random.uniform(10, 100, len(paths))
+        synthetic_stds = np.random.uniform(10, 200, len(paths))
         synthetic_params = list(zip(synthetic_means, synthetic_stds))
     else:
         # We use real distributions

@@ -5,6 +5,7 @@ path_max_depth: 3
 
 start_node: Thompson sampling
 end_node: Albert Einstein
+#end_node: Isaac Newton
 
 num_iters: 1000
 eval_iters: 20
@@ -22,8 +23,8 @@ algorithms:
   #- name: thompson-sampling-3
   #  initial_parameters: [300, 10, 1, 10000]
 
-  - name: thompson-sampling-4-[0, 0, 1, 1000]
-    initial_parameters: [0, 0, 1, 1000]
+  - name: thompson-sampling-4-[0, 0, 1, 2500]
+    initial_parameters: [0, 0, 1, 2500]
 
   - name: thompson-sampling-5-[ 0, 0, 1, 100]
     initial_parameters: [ 0, 0, 1, 100]
@@ -46,5 +47,5 @@ algorithms:
   - name: ucb-2
     confidence_level: 2
 
-  - name: epsilon-greedy-0.05
-    epsilon: 0.05
+  #- name: epsilon-greedy-0.05
+  #  epsilon: 0.05
