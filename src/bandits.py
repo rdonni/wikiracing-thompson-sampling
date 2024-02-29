@@ -26,9 +26,9 @@ class WikipediaArm:
 class GaussianTSArm(WikipediaArm):
     def __init__(self, initial_params, path, theoretical_params=None):
         WikipediaArm.__init__(self, path, theoretical_params)
-        self.µ, self.v, self.α, self.β = initial_params
+        self.initial_params = initial_params
+        self.µ, self.v, self.α, self.β = self.initial_params
         self.var = self.β / (self.α + 1)
-        self.observations_list = []
 
     def sample_prior(self):
         precision = np.random.gamma(self.α, 1 / self.β)
@@ -46,6 +46,10 @@ class GaussianTSArm(WikipediaArm):
         self.β += (self.v / (self.v + 1)) * (((observation - self.µ) ** 2) / 2)
         self.var = self.β / (self.α + 1)
 
+    def reset(self):
+        self.µ, self.v, self.α, self.β = self.initial_params
+        self.var = self.β / (self.α + 1)
+
     def get_params(self):
         return self.µ, self.var ** 0.5
 
@@ -59,6 +63,10 @@ class EpsGreedyArm(WikipediaArm):
     def update(self, observation):
         self.mean = (self.N * self.mean + observation) / (self.N + 1)
         self.N += 1
+
+    def reset(self):
+        self.mean = 0
+        self.N = 0
 
     def get_params(self):
         return [self.mean]
@@ -81,6 +89,10 @@ class UCBArm(WikipediaArm):
     def update(self, observation):
         self.mean = (self.N * self.mean + observation) / (self.N + 1)
         self.N += 1
+
+    def reset(self):
+        self.mean = 0
+        self.N = 0
 
     def get_params(self):
         return [self.mean]
@@ -138,6 +150,12 @@ class MultiArmedBandit:
         if self.use_synthetic_distributions:
             regret = self.compute_regret(best_arm_index)
             self.regrets.append(regret)
+
+    def reset(self):
+        for arm in self.arms:
+            arm.reset()
+        self.latencies = []
+        self.regrets = []
 
     def get_params(self):
         return [arm.get_params() for arm in self.arms]

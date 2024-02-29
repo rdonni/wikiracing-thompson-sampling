@@ -23,7 +23,7 @@ def main(cfg: DictConfig) -> None:
     if cfg.use_synthetic_distributions:
         # We model the average loading time of each path by a normal variable
         synthetic_means = np.random.uniform(500, 1500, len(paths))
-        synthetic_stds = np.random.uniform(10, 200, len(paths))
+        synthetic_stds = np.random.uniform(10, 100, len(paths))
         synthetic_params = list(zip(synthetic_means, synthetic_stds))
     else:
         # We use real distributions
@@ -60,11 +60,13 @@ def main(cfg: DictConfig) -> None:
     print(f'Using following algorithms : {[mab.name for mab in mabs]}.')
 
     simulation = Simulation(mabs=mabs,
+                            nb_simulations=cfg.num_simulations,
                             nb_iterations=cfg.num_iters,
                             eval_iterations=cfg.eval_iters,
                             results_path=cfg.results_path,
                             plots_path=cfg.plots_path,
-                            show_plots=cfg.show_plots)
+                            show_plots=cfg.show_plots,
+                            display_ci=cfg.display_ci)
     simulation.simulation()
 
 

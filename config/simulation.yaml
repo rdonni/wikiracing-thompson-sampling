@@ -7,11 +7,13 @@ start_node: Thompson sampling
 end_node: Albert Einstein
 #end_node: Isaac Newton
 
+num_simulations: 30
 num_iters: 1000
 eval_iters: 20
 plots_path: ./plots
 results_path: ./results
 show_plots: False
+display_ci: True
 
 algorithms:
   #- name: thompson-sampling
@@ -23,20 +25,20 @@ algorithms:
   #- name: thompson-sampling-3
   #  initial_parameters: [300, 10, 1, 10000]
 
-  - name: thompson-sampling-4-[0, 0, 1, 2500]
-    initial_parameters: [0, 0, 1, 2500]
+  #- name: thompson-sampling-4-[0, 0, 1, 2500]
+  #  initial_parameters: [0, 0, 1, 2500]
 
-  - name: thompson-sampling-5-[ 0, 0, 1, 100]
-    initial_parameters: [ 0, 0, 1, 100]
+  #- name: thompson-sampling-5-[ 0, 0, 1, 100]
+  #  initial_parameters: [ 0, 0, 1, 100]
 
   #- name: thompson-sampling-6
   #  initial_parameters: [ 300, 10, 1, 1 ]
 
-  - name: thompson-sampling-7-[ 0, 0, 1, 10]
-    initial_parameters: [ 0, 0, 1, 10]
+  #- name: thompson-sampling-7-[ 0, 0, 1, 10]
+  #  initial_parameters: [ 0, 0, 1, 10]
 
-  - name: thompson-sampling-8-[ 0, 0, 10, 1000]
-    initial_parameters: [ 0, 0, 10, 1000 ]
+  #- name: thompson-sampling-8-[ 0, 0, 10, 1000]
+  #  initial_parameters: [ 0, 0, 10, 1000 ]
 
   - name: thompson-sampling-9-[ 0, 0, 1, 1]
     initial_parameters: [ 0, 0, 1, 1 ]
@@ -47,5 +49,5 @@ algorithms:
   - name: ucb-2
     confidence_level: 2
 
-  #- name: epsilon-greedy-0.05
-  #  epsilon: 0.05
+  - name: epsilon-greedy-0.05
+    epsilon: 0.05
