@@ -8,11 +8,10 @@ from tqdm import tqdm
 
 
 class Simulation:
-    def __init__(self, mabs, nb_iterations, nb_simulations, eval_iterations, results_path, plots_path, show_plots, display_ci):
+    def __init__(self, mabs, nb_iterations, nb_simulations, results_path, plots_path, show_plots, display_ci):
         self.mabs = mabs
         self.nb_simulations = nb_simulations
         self.nb_iterations = nb_iterations
-        self.eval_iterations = eval_iterations
         self.results_path = results_path
         self.plots_path = plots_path
         self.show_plots = show_plots

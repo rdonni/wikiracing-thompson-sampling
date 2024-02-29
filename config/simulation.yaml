@@ -9,7 +9,6 @@ end_node: Albert Einstein
 
 num_simulations: 30
 num_iters: 1000
-eval_iters: 20
 plots_path: ./plots
 results_path: ./results
 show_plots: False

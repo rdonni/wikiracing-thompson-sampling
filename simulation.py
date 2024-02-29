@@ -62,7 +62,6 @@ def main(cfg: DictConfig) -> None:
     simulation = Simulation(mabs=mabs,
                             nb_simulations=cfg.num_simulations,
                             nb_iterations=cfg.num_iters,
-                            eval_iterations=cfg.eval_iters,
                             results_path=cfg.results_path,
                             plots_path=cfg.plots_path,
                             show_plots=cfg.show_plots,
