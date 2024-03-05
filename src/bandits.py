@@ -8,7 +8,10 @@ from src.latency_estimate import get_url_from_article_title, estimate_url_latenc
 
 
 class WikipediaArm:
-    def __init__(self, path, theoretical_params, drift: Drift):
+    def __init__(self,
+                 path: List[str],
+                 theoretical_params: tuple[float, float],
+                 drift: Drift):
         self.path = path
         self.theoretical_params = theoretical_params
         self.drift = drift
@@ -22,17 +25,18 @@ class WikipediaArm:
             path_latencies = np.sum(url_latencies)
             return path_latencies
         else:
-            return np.random.normal(self.theoretical_params[0], self.theoretical_params[1])
+            # TODO: intégrer la loi log normale
+            return np.exp(np.random.normal(self.theoretical_params[0], self.theoretical_params[1]))
 
-    def apply_drift(self, observation):
-        self.drift.apply_drift(observation)
+    def apply_drift(self, observation: float, current_iteration: int):
+        return self.drift.apply_drift(observation, current_iteration)
 
 
 class GaussianTSArm(WikipediaArm):
     def __init__(self,
                  initial_params: List[float],
                  path: List[str],
-                 theoretical_params: List[float] = None,
+                 theoretical_params: Union[tuple[float, float], None],
                  drift: Drift = None) -> None:
         WikipediaArm.__init__(self, path, theoretical_params, drift)
         self.initial_params = initial_params
@@ -49,6 +53,7 @@ class GaussianTSArm(WikipediaArm):
         return sample
 
     def compute_posterior(self, observation: float) -> None:
+        # TODO: intégrer la loi log normale
         self.µ = (self.v * self.µ + observation) / (self.v + 1)
         self.v += 1
         self.α += 1 / 2
@@ -66,7 +71,7 @@ class GaussianTSArm(WikipediaArm):
 class EpsGreedyArm(WikipediaArm):
     def __init__(self,
                  path: List[str],
-                 theoretical_params: List[float] = None,
+                 theoretical_params: Union[tuple[float, float], None],
                  drift: Drift = None) -> None:
         WikipediaArm.__init__(self, path, theoretical_params, drift)
         self.mean = 0
@@ -88,7 +93,7 @@ class UCBArm(WikipediaArm):
     def __init__(self,
                  confidence_level: float,
                  path: List[str],
-                 theoretical_params: List[float] = None,
+                 theoretical_params: tuple[float, float],
                  drift: Drift = None) -> None:
         WikipediaArm.__init__(self, path, theoretical_params, drift)
         self.confidence_level = confidence_level
@@ -118,53 +123,62 @@ class MultiArmedBandit:
     def __init__(self,
                  arms: List[Union[GaussianTSArm, EpsGreedyArm, UCBArm]],
                  name: str,
-                 use_synthetic_distributions: bool = False,
+                 use_synthetic_distributions: bool,
+                 use_drift: bool,
                  epsilon: Union[float, None] = None) -> None:
         self.arms = arms
         self.name = name
         self.latencies = []
         self.use_synthetic_distributions = use_synthetic_distributions
+        self.use_drift = use_drift
         if epsilon is not None:
             self.epsilon = epsilon
         if self.use_synthetic_distributions:
             self.regrets = []
 
-    def run_one_iteration(self) -> None:
+    def run_one_iteration(self, current_iteration: int) -> None:
         if 'thompson-sampling' in self.name:
-            self.run_one_iteration_thompson_sampling()
+            self.run_one_iteration_thompson_sampling(current_iteration)
         elif 'epsilon-greedy' in self.name:
-            self.run_one_iteration_epsilon_greedy()
+            self.run_one_iteration_epsilon_greedy(current_iteration)
         elif 'ucb' in self.name:
-            self.run_one_iteration_ucb()
+            self.run_one_iteration_ucb(current_iteration)
         else:
             raise ValueError('Not a valid name')
 
-    def run_one_iteration_thompson_sampling(self) -> None:
+    def run_one_iteration_thompson_sampling(self, current_iteration: int) -> None:
         sampled_values = [arm.sample_prior() for arm in self.arms]
         best_arm_index = np.argmin(sampled_values)
         if self.use_synthetic_distributions:
             regret = self.compute_regret(best_arm_index)
             self.regrets.append(regret)
         observation = self.arms[best_arm_index].get_observation()
+        if self.use_drift:
+            observation = self.arms[best_arm_index].apply_drift(observation, current_iteration)
         self.arms[best_arm_index].compute_posterior(observation)
         self.latencies.append(observation)
 
-    def run_one_iteration_epsilon_greedy(self) -> None:
+    def run_one_iteration_epsilon_greedy(self, current_iteration: int) -> None:
         if np.random.random() < self.epsilon:
             best_arm_index = np.random.choice(len(self.arms))
         else:
             best_arm_index = np.argmin([arm.mean for arm in self.arms])
         observation = self.arms[best_arm_index].get_observation()
+        if self.use_drift:
+            observation = self.arms[best_arm_index].apply_drift(observation, current_iteration)
         self.arms[best_arm_index].update(observation)
         self.latencies.append(observation)
         if self.use_synthetic_distributions:
+            # TODO : modifier calcul du regret lorsqu'il y a du drift
             regret = self.compute_regret(best_arm_index)
             self.regrets.append(regret)
 
-    def run_one_iteration_ucb(self) -> None:
+    def run_one_iteration_ucb(self, current_iteration: int) -> None:
         sampled_values = [arm.sample() for arm in self.arms]
         best_arm_index = np.argmax(sampled_values)
         observation = self.arms[best_arm_index].get_observation()
+        if self.use_drift:
+            observation = self.arms[best_arm_index].apply_drift(observation, current_iteration)
         self.arms[best_arm_index].update(observation)
         self.latencies.append(observation)
         if self.use_synthetic_distributions:
@@ -196,3 +210,6 @@ class MultiArmedBandit:
             chosen_arm_mean = self.arms[chosen_arm_index].get_params()[0]
             regret = chosen_arm_mean - means[optimal_arm_index]
             return regret if regret > 0 else 0
+
+    def compute_average_rewards_with_drift(self):
+        return [arm.drift.predict_drift(arm.theoretical_params) for arm in self.arms]

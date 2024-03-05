@@ -8,9 +8,10 @@ from tqdm import tqdm
 
 
 class Simulation:
-    def __init__(self, mabs, nb_iterations, nb_simulations, results_path, plots_path, show_plots, display_ci):
+    def __init__(self, mabs, nb_iterations, nb_simulations, use_drift, results_path, plots_path, show_plots, display_ci):
         self.mabs = mabs
         self.nb_simulations = nb_simulations
+        self.use_drift = use_drift
         self.nb_iterations = nb_iterations
         self.results_path = results_path
         self.plots_path = plots_path
@@ -21,14 +22,20 @@ class Simulation:
 
     def simulation(self):
 
+        # TODO: adapter le code pour plot les reward si elles sont connues ou alors uniquement le drift si on utilise
+        #  les données réelles
+
+        #if self.use_drift:
+        #    self.plot_average_reward_per_arm()
+
         results = {}
         for sim_num in range(self.nb_simulations):
             print(f'Running simulation number {sim_num}...')
             # We reset the distributions between each simulation
             self.reset()
-            for _ in tqdm(range(self.nb_iterations)):
+            for i in tqdm(range(self.nb_iterations)):
                 for mab in self.mabs:
-                    mab.run_one_iteration()
+                    mab.run_one_iteration(i)
                 self.n_iter += 1
             for mab in self.mabs:
                 print(
@@ -50,6 +57,7 @@ class Simulation:
 
     def generate_plots(self, results, sim_num: int = None) -> None:
 
+        # Cumulative loading time plot
         fig = go.Figure()
         for mab_index in range(len(self.mabs)):
             if sim_num is None:
@@ -70,7 +78,8 @@ class Simulation:
             fig.add_trace(go.Scatter(x=list(range(len(mab_results))),
                                      y=mab_results,
                                      mode='lines',
-                                     name=self.mabs[mab_index].name))
+                                     name=self.mabs[mab_index].name,
+                                     line=dict(color=px.colors.qualitative.Plotly[mab_index])))
 
             if (sim_num is None) and self.display_ci:
                 fig.add_trace(go.Scatter(x=list(range(len(mab_results))),
@@ -88,9 +97,10 @@ class Simulation:
                                          fill='tonexty',
                                          showlegend=False))
             fig.update_layout(title_text=f"Cumulative loading time at iteration : {self.n_iter}")
-            if self.show_plots:
+            if self.show_plots and (sim_num is None):
                 fig.show()
 
+        # Average loading time plot
         fig_2 = go.Figure()
         for mab_index in range(len(self.mabs)):
             if sim_num is None:
@@ -111,7 +121,8 @@ class Simulation:
             fig_2.add_trace(go.Scatter(x=list(range(len(mab_results))),
                                        y=mab_results,
                                        mode='lines',
-                                       name=self.mabs[mab_index].name))
+                                       name=self.mabs[mab_index].name,
+                                       line=dict(color=px.colors.qualitative.Plotly[mab_index])))
 
             if (sim_num is None) and self.display_ci:
                 fig_2.add_trace(go.Scatter(x=list(range(len(mab_results))),
@@ -131,7 +142,7 @@ class Simulation:
                                            fill='tonexty',
                                            showlegend=False))
             fig_2.update_layout(title_text=f"Cumulative loading time at iteration : {self.n_iter}")
-            if self.show_plots:
+            if self.show_plots and (sim_num is None):
                 fig_2.show()
 
         if sim_num is None:
@@ -144,6 +155,32 @@ class Simulation:
             os.mkdir(fig_path)
         fig.write_image(f"{fig_path}/cumulative_{self.n_iter}.png", scale=4)
         fig_2.write_image(f"{fig_path}/average_{self.n_iter}.png", scale=4)
+
+    def plot_average_reward_per_arm(self) -> None:
+        random_mab = self.mabs[0]
+        rewards_with_drift = random_mab.compute_average_rewards_with_drift()
+
+        traces = []
+        for i, rewards in enumerate(rewards_with_drift):
+            trace = go.Scatter(
+                x=list(range(len(rewards))),
+                y=rewards,
+                mode='lines',
+                name=f'Rewards of arm {i}'
+            )
+            traces.append(trace)
+
+        layout = go.Layout(
+            title='Arms rewards with drift',
+        )
+
+        fig = go.Figure(data=traces, layout=layout)
+
+        if not os.path.exists(self.plots_path):
+            os.mkdir(self.plots_path)
+        fig.write_image(f"{self.plots_path}/rewards_with_drift.png", scale=4)
+        if self.show_plots:
+            fig.show()
 
 
 def hex_to_rgba(hex_color, alpha=1.0):
