@@ -9,12 +9,8 @@ from src.latency_estimate import get_url_from_article_title, estimate_url_latenc
 
 class WikipediaArm:
     def __init__(self,
-                 path: List[str],
-                 theoretical_params: tuple[float, float],
-                 drift: Drift):
+                 path: List[str]):
         self.path = path
-        self.theoretical_params = theoretical_params
-        self.drift = drift
 
     def get_observation(self):
         if self.theoretical_params is None:
@@ -26,7 +22,13 @@ class WikipediaArm:
             return path_latencies
         else:
             # TODO: intégrer la loi log normale
-            return np.exp(np.random.normal(self.theoretical_params[0], self.theoretical_params[1]))
+            return np.random.normal(self.theoretical_params[0], self.theoretical_params[1])
+
+    def set_synthetic_distribution(self, synthetic_distributions: tuple[float, float], ) -> None:
+        self.theoretical_params = synthetic_distributions
+
+    def set_drift(self, drift: Drift) -> None:
+        self.drift = drift
 
     def apply_drift(self, observation: float, current_iteration: int):
         return self.drift.apply_drift(observation, current_iteration)
@@ -35,10 +37,8 @@ class WikipediaArm:
 class GaussianTSArm(WikipediaArm):
     def __init__(self,
                  initial_params: List[float],
-                 path: List[str],
-                 theoretical_params: Union[tuple[float, float], None],
-                 drift: Drift = None) -> None:
-        WikipediaArm.__init__(self, path, theoretical_params, drift)
+                 path: List[str]) -> None:
+        WikipediaArm.__init__(self, path)
         self.initial_params = initial_params
         self.µ, self.v, self.α, self.β = self.initial_params
         self.var = self.β / (self.α + 1)
@@ -70,10 +70,8 @@ class GaussianTSArm(WikipediaArm):
 
 class EpsGreedyArm(WikipediaArm):
     def __init__(self,
-                 path: List[str],
-                 theoretical_params: Union[tuple[float, float], None],
-                 drift: Drift = None) -> None:
-        WikipediaArm.__init__(self, path, theoretical_params, drift)
+                 path: List[str]) -> None:
+        WikipediaArm.__init__(self, path)
         self.mean = 0
         self.N = 0
 
@@ -92,10 +90,8 @@ class EpsGreedyArm(WikipediaArm):
 class UCBArm(WikipediaArm):
     def __init__(self,
                  confidence_level: float,
-                 path: List[str],
-                 theoretical_params: tuple[float, float],
-                 drift: Drift = None) -> None:
-        WikipediaArm.__init__(self, path, theoretical_params, drift)
+                 path: List[str]) -> None:
+        WikipediaArm.__init__(self, path)
         self.confidence_level = confidence_level
         self.mean = 0
         self.N = 0
@@ -198,6 +194,14 @@ class MultiArmedBandit:
         path_average_time = [params[0] for params in self.get_params()]
         best_path_index = np.argmin(path_average_time)
         return self.arms[best_path_index].path
+
+    def set_synthetic_distributions(self, synthetic_distributions: List[tuple[float, float]]):
+        for i, arm in enumerate(self.arms):
+            arm.set_synthetic_distribution(synthetic_distributions[i])
+
+    def set_drifts(self, drifts: List[Drift]):
+        for i, arm in enumerate(self.arms):
+            arm.set_drift(drifts[i])
 
     def compute_regret(self, chosen_arm_index: np.ndarray[int]) -> float:
         theoretical_params = [arm.theoretical_params for arm in self.arms]

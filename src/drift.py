@@ -8,10 +8,10 @@ class Drift:
         self.num_arm_played = 0
 
         if self.drift_method == 'linear':
-            self.growth_rate = np.random.uniform(-0.1, 0.1)
+            self.growth_rate = np.random.uniform(-0.05, 0.05)
 
         if self.drift_method == 'brownian':
-            self.noise_var = 2
+            self.noise_var = 1
 
         self.predicted_drifts = self.predict_drift()
 
