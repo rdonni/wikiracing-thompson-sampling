@@ -48,28 +48,8 @@ class Simulation:
             print(f'Running simulation number {sim_num}...')
             # We reset the distributions between each simulation
             self.reset()
-
-            num_paths = len(self.mabs[0].arms)
-            if self.use_synthetic_distributions:
-                # We model the average loading time of each path by a normal variable
-                synthetic_means = np.random.uniform(500, 1500, num_paths)
-                synthetic_stds = np.random.uniform(10, 100, num_paths)
-                synthetic_params = list(zip(synthetic_means, synthetic_stds))
-            else:
-                # We use real distributions
-                synthetic_params = [None] * num_paths
-
-                # Set drift for all arms
-            if self.use_drift:
-                print(self.drift_method)
-                drifts = [Drift(self.drift_method, self.nb_iterations) for _ in range(num_paths)]
-            else:
-                drifts = [None] * num_paths
-
-            for i, mab in enumerate(self.mabs):
-                mab.set_synthetic_distributions(synthetic_params)
-                mab.set_drifts(drifts)
-
+            self.set_synthetic_distributions()
+            self.set_drifts()
             for i in tqdm(range(self.nb_iterations)):
                 for mab in self.mabs:
                     mab.run_one_iteration(i)
@@ -91,6 +71,30 @@ class Simulation:
         for mab in self.mabs:
             mab.reset()
         self.n_iter = 0
+
+    def set_synthetic_distributions(self):
+        num_paths = len(self.mabs[0].arms)
+        if self.use_synthetic_distributions:
+            # We model the average loading time of each path by a normal variable
+            synthetic_means = np.random.uniform(500, 1500, num_paths)
+            synthetic_stds = np.random.uniform(10, 100, num_paths)
+            synthetic_params = list(zip(synthetic_means, synthetic_stds))
+        else:
+            # We use real distributions
+            synthetic_params = [None] * num_paths
+
+        for i, mab in enumerate(self.mabs):
+            mab.set_synthetic_distributions(synthetic_params)
+
+    def set_drifts(self):
+        num_paths = len(self.mabs[0].arms)
+        if self.use_drift:
+            print(self.drift_method)
+            drifts = [Drift(self.drift_method, self.nb_iterations) for _ in range(num_paths)]
+        else:
+            drifts = [None] * num_paths
+        for i, mab in enumerate(self.mabs):
+            mab.set_drifts(drifts)
 
     def generate_plots(self, results, sim_num: int = None) -> None:
 
