@@ -82,7 +82,8 @@ class Simulation:
         # Aggregation plots to sum up all simulations
         self.generate_plots(cumulative_latencies, 'Cumulative loading time')
         self.generate_plots(average_latencies, 'Average loading time')
-        self.generate_plots(average_regrets, 'Regrets')
+        if self.use_synthetic_distributions:
+            self.generate_plots(average_regrets, 'Regrets')
 
         # Save results as a json file
         if not os.path.exists(self.results_path):
@@ -116,7 +117,6 @@ class Simulation:
     def set_drifts(self):
         num_paths = len(self.mabs[0].arms)
         if self.use_drift:
-            print(self.drift_method)
             drifts = [Drift(self.drift_method, self.nb_iterations) for _ in range(num_paths)]
         else:
             drifts = [None] * num_paths
@@ -131,7 +131,6 @@ class Simulation:
             if sim_num is None:
                 # If no sim_num is given, we extract the mab results of all simulations as a matrix
                 mab_results = [results[sim_num][mab_index] for sim_num in results.keys()]
-                #mab_results = np.cumsum(mab_results, axis=1)
 
                 ci = 1.96 * np.std(mab_results, axis=0) / np.sqrt(self.nb_simulations)
                 mab_results = np.mean(mab_results, axis=0)
@@ -141,7 +140,6 @@ class Simulation:
             else:
                 # If a sim_num is given, we extract the mab results only for the asked simulation as a list
                 mab_results = results[sim_num][mab_index]
-                #mab_results = np.cumsum(mab_results)
 
             fig.add_trace(go.Scatter(x=list(range(len(mab_results))),
                                      y=mab_results,

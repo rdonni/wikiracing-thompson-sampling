@@ -25,8 +25,6 @@ def main(cfg: DictConfig) -> None:
 
     mabs = []
     for alg in cfg.algorithms:
-        print(alg.type)
-        print('unknown-mean-std-thompson-sampling')
         if alg.type == 'unknown-mean-std-thompson-sampling':
             ts_arms = [UnknownMeanStdGaussianTSArm(initial_params=alg.initial_parameters,
                                                    path=paths[i]) for i in range(len(paths))]
