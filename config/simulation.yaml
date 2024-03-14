@@ -26,27 +26,20 @@ show_plots: False
 display_ci: True
 
 algorithms:
-  #- name: thompson-sampling-[ 0, 0, 1, 0.1]
-  #  initial_parameters: [ 0, 0, 1, 0.1]
+  - type: unknown-mean-std-thompson-sampling
+    name: thompson-sampling-[ 0, 0, 1, 0.1]
+    initial_parameters: [ 0, 0, 1, 0.1]
 
-  #- name: thompson-sampling-[ 0, 0, 1, 0.05]
-  #  initial_parameters: [ 0, 0, 1, 0.05]
-
-  #- name: thompson-sampling-[ 0.6, 0, 1, 0.01]
-  #  initial_parameters: [ 0.6, 0, 1, 0.01]
-
-  #- name: thompson-sampling-[ 0, 0, 1, 0.01]
-  #  initial_parameters: [ 0, 0, 1, 0.01]
-
-  - name: thompson-sampling-[ 0, 900]
+  - type: unknown-mean-thompson-sampling
+    name: thompson-sampling-[ 0, 900]
     initial_parameters: [ 0, 900]
 
-  - name: ucb-2
+  - type: ucb
+    name: ucb-2
     confidence_level: 2
 
-  - name: epsilon-greedy-0.05
+  - type: epsilon-greedy
+    name: epsilon-greedy-0.05
     epsilon: 0.05
 
-  - name: epsilon-greedy-0.10
-    epsilon: 0.10
 

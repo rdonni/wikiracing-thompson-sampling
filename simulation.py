@@ -3,7 +3,11 @@ import json
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-from src.bandits import GaussianTSArm, MultiArmedBandit, EpsGreedyArm, UCBArm
+from src.bandits import (UnknownMeanGaussianTSArm,
+                         UnknownMeanStdGaussianTSArm,
+                         MultiArmedBandit,
+                         EpsGreedyArm,
+                         UCBArm)
 from src.dfs import dfs
 from src.simulation import Simulation
 
@@ -21,26 +25,40 @@ def main(cfg: DictConfig) -> None:
 
     mabs = []
     for alg in cfg.algorithms:
-        if 'thompson-sampling' in alg.name:
-            ts_arms = [GaussianTSArm(initial_params=alg.initial_parameters,
-                                     path=paths[i]) for i in range(len(paths))]
+        print(alg.type)
+        print('unknown-mean-std-thompson-sampling')
+        if alg.type == 'unknown-mean-std-thompson-sampling':
+            ts_arms = [UnknownMeanStdGaussianTSArm(initial_params=alg.initial_parameters,
+                                                   path=paths[i]) for i in range(len(paths))]
             mabs.append(MultiArmedBandit(ts_arms,
                                          name=alg.name,
+                                         type=alg.type,
                                          use_synthetic_distributions=cfg.use_synthetic_distributions,
                                          use_drift=cfg.use_drift))
 
-        elif 'ucb' in alg.name:
+        elif alg.type == 'unknown-mean-thompson-sampling':
+            ts_arms = [UnknownMeanGaussianTSArm(initial_params=alg.initial_parameters,
+                                                path=paths[i]) for i in range(len(paths))]
+            mabs.append(MultiArmedBandit(ts_arms,
+                                         name=alg.name,
+                                         type=alg.type,
+                                         use_synthetic_distributions=cfg.use_synthetic_distributions,
+                                         use_drift=cfg.use_drift))
+
+        elif alg.type == 'ucb':
             ucb_arms = [UCBArm(confidence_level=alg.confidence_level,
                                path=paths[i]) for i in range(len(paths))]
             mabs.append(MultiArmedBandit(ucb_arms,
                                          name=alg.name,
+                                         type=alg.type,
                                          use_synthetic_distributions=cfg.use_synthetic_distributions,
                                          use_drift=cfg.use_drift))
 
-        elif 'epsilon-greedy' in alg.name:
+        elif alg.type == 'epsilon-greedy':
             eps_arms = [EpsGreedyArm(path=paths[i]) for i in range(len(paths))]
             mabs.append(MultiArmedBandit(eps_arms,
                                          name=alg.name,
+                                         type=alg.type,
                                          use_synthetic_distributions=cfg.use_synthetic_distributions,
                                          use_drift=cfg.use_drift,
                                          epsilon=alg.epsilon))

@@ -42,6 +42,8 @@ class Simulation:
         # TODO: adapter le code pour plot les reward si elles sont connues ou alors uniquement le drift si on utilise
         #  les données réelles
 
+        # TODO: ajouter le plot du regret
+        # TODO: refactoring sur la classe et sur les méthodes de plot
         #if self.use_drift:
         #    self.plot_average_reward_per_arm()
 
@@ -55,7 +57,6 @@ class Simulation:
             for i in tqdm(range(self.nb_iterations)):
                 for mab in self.mabs:
                     mab.run_one_iteration(i)
-                #print(mab.get_params())
                 self.n_iter += 1
             for mab in self.mabs:
                 print(

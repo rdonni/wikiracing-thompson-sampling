@@ -34,7 +34,7 @@ class WikipediaArm:
         return self.drift.apply_drift(observation, current_iteration)
 
 
-class GaussianTSArm(WikipediaArm):
+class UnknownMeanStdGaussianTSArm(WikipediaArm):
     def __init__(self,
                  initial_params: List[float],
                  path: List[str]) -> None:
@@ -66,6 +66,33 @@ class GaussianTSArm(WikipediaArm):
 
     def get_params(self) -> tuple[float, float]:
         return self.µ, self.var ** 0.5
+
+
+class UnknownMeanGaussianTSArm(WikipediaArm):
+
+    def __init__(self,
+                 initial_params: List[float],
+                 path: List[str]) -> None:
+        WikipediaArm.__init__(self, path)
+        self.initial_params = initial_params
+        self.μ, self.v = self.initial_params
+        self.τ = 1 / self.v
+        self.τ_0 = 0.0001  # the sum of all individual precisions
+
+    def sample_prior(self):
+        return np.random.normal(self.μ, np.sqrt(1 / self.τ_0))
+
+    def compute_posterior(self, x):
+        self.μ = ((self.τ_0 * self.μ) + (self.τ * x)) / (self.τ_0 + self.τ)
+        self.τ_0 += self.τ
+
+    def reset(self) -> None:
+        self.µ, self.v = self.initial_params
+        self.τ = 1 / self.v
+        self.τ_0 = 0.0001
+
+    def get_params(self) -> tuple[float, float]:
+        return self.µ, self.v ** 0.5
 
 
 class EpsGreedyArm(WikipediaArm):
@@ -117,13 +144,15 @@ class UCBArm(WikipediaArm):
 
 class MultiArmedBandit:
     def __init__(self,
-                 arms: List[Union[GaussianTSArm, EpsGreedyArm, UCBArm]],
+                 arms: List[Union[UnknownMeanGaussianTSArm, UnknownMeanStdGaussianTSArm, EpsGreedyArm, UCBArm]],
                  name: str,
+                 type: str,
                  use_synthetic_distributions: bool,
                  use_drift: bool,
                  epsilon: Union[float, None] = None) -> None:
         self.arms = arms
         self.name = name
+        self.type = type
         self.latencies = []
         self.use_synthetic_distributions = use_synthetic_distributions
         self.use_drift = use_drift
@@ -133,14 +162,14 @@ class MultiArmedBandit:
             self.regrets = []
 
     def run_one_iteration(self, current_iteration: int) -> None:
-        if 'thompson-sampling' in self.name:
+        if self.type in ['unknown-mean-std-thompson-sampling', 'unknown-mean-thompson-sampling']:
             self.run_one_iteration_thompson_sampling(current_iteration)
-        elif 'epsilon-greedy' in self.name:
+        elif self.type == 'epsilon-greedy':
             self.run_one_iteration_epsilon_greedy(current_iteration)
-        elif 'ucb' in self.name:
+        elif self.type == 'ucb':
             self.run_one_iteration_ucb(current_iteration)
         else:
-            raise ValueError('Not a valid name')
+            raise ValueError('Not a valid type.')
 
     def run_one_iteration_thompson_sampling(self, current_iteration: int) -> None:
         sampled_values = [arm.sample_prior() for arm in self.arms]
