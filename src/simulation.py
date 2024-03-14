@@ -16,6 +16,7 @@ class Simulation:
                  nb_iterations,
                  nb_simulations,
                  use_synthetic_distributions,
+                 synthetic_data_config,
                  use_drift,
                  drift_method,
                  results_path,
@@ -25,6 +26,7 @@ class Simulation:
         self.mabs = mabs
         self.nb_simulations = nb_simulations
         self.use_synthetic_distributions = use_synthetic_distributions
+        self.synthetic_data_config = synthetic_data_config
         self.use_drift = use_drift
         self.drift_method = drift_method
         self.nb_iterations = nb_iterations
@@ -53,6 +55,7 @@ class Simulation:
             for i in tqdm(range(self.nb_iterations)):
                 for mab in self.mabs:
                     mab.run_one_iteration(i)
+                #print(mab.get_params())
                 self.n_iter += 1
             for mab in self.mabs:
                 print(
@@ -76,8 +79,12 @@ class Simulation:
         num_paths = len(self.mabs[0].arms)
         if self.use_synthetic_distributions:
             # We model the average loading time of each path by a normal variable
-            synthetic_means = np.random.uniform(500, 1500, num_paths)
-            synthetic_stds = np.random.uniform(10, 100, num_paths)
+            synthetic_means = np.random.uniform(self.synthetic_data_config['min_mean'],
+                                                self.synthetic_data_config['max_mean'],
+                                                num_paths)
+            synthetic_stds = np.random.uniform(self.synthetic_data_config['min_std'],
+                                               self.synthetic_data_config['max_std'],
+                                               num_paths)
             synthetic_params = list(zip(synthetic_means, synthetic_stds))
         else:
             # We use real distributions
@@ -182,7 +189,7 @@ class Simulation:
                                            fillcolor=hex_to_rgba(px.colors.qualitative.Plotly[mab_index], 0.2),
                                            fill='tonexty',
                                            showlegend=False))
-            fig_2.update_layout(title_text=f"Cumulative loading time at iteration : {self.n_iter}")
+            fig_2.update_layout(title_text=f"Average loading time at iteration : {self.n_iter}")
             if self.show_plots and (sim_num is None):
                 fig_2.show()
 

@@ -1,30 +1,52 @@
+# Synthetic data configuration
 use_synthetic_distributions: True
-use_drift: False
-drift_method: linear
+synthetic_data_config:
+  min_mean: 500
+  max_mean: 1500
+  # For a fixed std, min_std = max_std
+  min_std: 30
+  max_std: 30
+
+# Drift config
+use_drift: False # Use drift or not
+drift_method: linear # If use_drift, the drift method to apply (among linear and brownian)
 
 graph_path: ./graph.json
 path_max_depth: 3
-max_num_paths: 30
+max_num_paths: 100
 
 start_node: Thompson sampling
 end_node: Albert Einstein
 
-num_simulations: 10
-num_iters: 20000
+num_simulations: 50
+num_iters: 15000
 plots_path: ./plots
 results_path: ./results
 show_plots: False
 display_ci: True
 
 algorithms:
-  #- name: thompson-sampling-[ 0, 0, 1, 1000]
-  #  initial_parameters: [ 0, 0, 1, 1000]
+  #- name: thompson-sampling-[ 0, 0, 1, 0.1]
+  #  initial_parameters: [ 0, 0, 1, 0.1]
 
-  - name: thompson-sampling-[ 0, 0, 1, 1]
-    initial_parameters: [ 0, 0, 1, 1]
+  #- name: thompson-sampling-[ 0, 0, 1, 0.05]
+  #  initial_parameters: [ 0, 0, 1, 0.05]
+
+  #- name: thompson-sampling-[ 0.6, 0, 1, 0.01]
+  #  initial_parameters: [ 0.6, 0, 1, 0.01]
+
+  #- name: thompson-sampling-[ 0, 0, 1, 0.01]
+  #  initial_parameters: [ 0, 0, 1, 0.01]
+
+  - name: thompson-sampling-[ 0, 900]
+    initial_parameters: [ 0, 900]
 
   - name: ucb-2
     confidence_level: 2
 
   - name: epsilon-greedy-0.05
     epsilon: 0.05
+
+  - name: epsilon-greedy-0.10
+    epsilon: 0.10
+

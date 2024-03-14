@@ -53,6 +53,7 @@ def main(cfg: DictConfig) -> None:
                             nb_simulations=cfg.num_simulations,
                             nb_iterations=cfg.num_iters,
                             use_synthetic_distributions=cfg.use_synthetic_distributions,
+                            synthetic_data_config=cfg.synthetic_data_config,
                             use_drift=cfg.use_drift,
                             drift_method=cfg.drift_method,
                             results_path=cfg.results_path,
