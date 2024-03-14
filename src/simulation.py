@@ -10,7 +10,6 @@ from src.drift import Drift
 
 
 class Simulation:
-    # TODO: Clean la classe Simulation en factorisant le code avec des méthodes
     def __init__(self,
                  mabs,
                  nb_iterations,
@@ -39,14 +38,6 @@ class Simulation:
 
     def simulation(self):
 
-        # TODO: adapter le code pour plot les reward si elles sont connues ou alors uniquement le drift si on utilise
-        #  les données réelles
-
-        # TODO: ajouter le plot du regret
-        # TODO: refactoring sur la classe et sur les méthodes de plot
-        #if self.use_drift:
-        #    self.plot_average_reward_per_arm()
-
         results = {}
         average_latencies = {}
         cumulative_latencies = {}
@@ -58,6 +49,10 @@ class Simulation:
             self.reset()
             self.set_synthetic_distributions()
             self.set_drifts()
+
+            if self.use_drift and self.use_synthetic_distributions:
+                self.plot_average_reward_per_arm(sim_num)
+
             for i in tqdm(range(self.nb_iterations)):
                 for mab in self.mabs:
                     mab.run_one_iteration(i)
@@ -183,9 +178,9 @@ class Simulation:
         else:
             raise ValueError('Not a valid figure title name.')
 
-    def plot_average_reward_per_arm(self) -> None:
+    def plot_average_reward_per_arm(self, sim_num) -> None:
         random_mab = self.mabs[0]
-        rewards_with_drift = random_mab.compute_average_rewards_with_drift()
+        rewards_with_drift = random_mab.compute_rewards_average_with_drift()
 
         traces = []
         for i, rewards in enumerate(rewards_with_drift):
@@ -203,9 +198,12 @@ class Simulation:
 
         fig = go.Figure(data=traces, layout=layout)
 
-        if not os.path.exists(self.plots_path):
-            os.mkdir(self.plots_path)
-        fig.write_image(f"{self.plots_path}/rewards_with_drift.png", scale=4)
+        fig_path = os.path.join(self.plots_path, f"simulation_{sim_num}")
+        if not os.path.exists(fig_path):
+            if not os.path.exists(self.plots_path):
+                os.mkdir(self.plots_path)
+            os.mkdir(fig_path)
+        fig.write_image(f"{fig_path}/rewards_with_drift.png", scale=4)
         if self.show_plots:
             fig.show()
 
