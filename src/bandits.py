@@ -240,9 +240,9 @@ class MultiArmedBandit:
             means = [param[0] for param in theoretical_params]
 
             optimal_arm_index = np.argmin(means)
-            chosen_arm_mean = self.arms[chosen_arm_index].get_params()[0]
+            chosen_arm_mean = means[chosen_arm_index]
             regret = chosen_arm_mean - means[optimal_arm_index]
-            return regret if regret > 0 else 0
+            return regret
 
     def compute_average_rewards_with_drift(self):
         return [arm.drift.predict_drift(arm.theoretical_params) for arm in self.arms]

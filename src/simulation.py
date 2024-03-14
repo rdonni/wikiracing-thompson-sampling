@@ -48,6 +48,10 @@ class Simulation:
         #    self.plot_average_reward_per_arm()
 
         results = {}
+        average_latencies = {}
+        cumulative_latencies = {}
+        average_regrets = {}
+
         for sim_num in range(self.nb_simulations):
             print(f'Running simulation number {sim_num}...')
             # We reset the distributions between each simulation
@@ -62,8 +66,23 @@ class Simulation:
                 print(
                     f"At iteration {self.n_iter}, for {mab.name}, cumulative latency is equal to {np.sum(mab.latencies)} the best path is {mab.get_best_path()}.")
             results[sim_num] = [list(mab.latencies) for mab in self.mabs]
-            self.generate_plots(results, sim_num)
-        self.generate_plots(results)
+
+            if self.use_synthetic_distributions:
+                sim_regrets = [list(mab.regrets) for mab in self.mabs]
+                average_regrets[sim_num] = np.cumsum(sim_regrets, axis=1) / (np.arange(self.nb_iterations) + 1)
+
+            # Plots for the current simulation
+            cumulative_latencies[sim_num] = np.cumsum(results[sim_num], axis=1)
+            average_latencies[sim_num] = np.cumsum(results[sim_num], axis=1) / (np.arange(self.nb_iterations) + 1)
+            self.generate_plots(cumulative_latencies, 'Cumulative loading time', sim_num)
+            self.generate_plots(average_latencies, 'Average loading time', sim_num)
+            if self.use_synthetic_distributions:
+                self.generate_plots(average_regrets, 'Regrets', sim_num)
+
+        # Aggregation plots to sum up all simulations
+        self.generate_plots(cumulative_latencies, 'Cumulative loading time')
+        self.generate_plots(average_latencies, 'Average loading time')
+        self.generate_plots(average_regrets, 'Regrets')
 
         # Save results as a json file
         if not os.path.exists(self.results_path):
@@ -104,7 +123,7 @@ class Simulation:
         for i, mab in enumerate(self.mabs):
             mab.set_drifts(drifts)
 
-    def generate_plots(self, results, sim_num: int = None) -> None:
+    def generate_plots(self, results, title: str, sim_num: int = None) -> None:
 
         # Cumulative loading time plot
         fig = go.Figure()
@@ -112,7 +131,7 @@ class Simulation:
             if sim_num is None:
                 # If no sim_num is given, we extract the mab results of all simulations as a matrix
                 mab_results = [results[sim_num][mab_index] for sim_num in results.keys()]
-                mab_results = np.cumsum(mab_results, axis=1)
+                #mab_results = np.cumsum(mab_results, axis=1)
 
                 ci = 1.96 * np.std(mab_results, axis=0) / np.sqrt(self.nb_simulations)
                 mab_results = np.mean(mab_results, axis=0)
@@ -122,7 +141,7 @@ class Simulation:
             else:
                 # If a sim_num is given, we extract the mab results only for the asked simulation as a list
                 mab_results = results[sim_num][mab_index]
-                mab_results = np.cumsum(mab_results)
+                #mab_results = np.cumsum(mab_results)
 
             fig.add_trace(go.Scatter(x=list(range(len(mab_results))),
                                      y=mab_results,
@@ -145,54 +164,9 @@ class Simulation:
                                          fillcolor=hex_to_rgba(px.colors.qualitative.Plotly[mab_index], 0.2),
                                          fill='tonexty',
                                          showlegend=False))
-            fig.update_layout(title_text=f"Cumulative loading time at iteration : {self.n_iter}")
+            fig.update_layout(title_text=f"{title} at iteration : {self.n_iter}")
             if self.show_plots and (sim_num is None):
                 fig.show()
-
-        # Average loading time plot
-        fig_2 = go.Figure()
-        for mab_index in range(len(self.mabs)):
-            if sim_num is None:
-                # If no sim_num is given, we extract the mab results of all simulations as a matrix
-                mab_results = [results[sim_num][mab_index] for sim_num in results.keys()]
-                mab_results = np.cumsum(mab_results, axis=1) / (np.arange(self.nb_iterations) + 1)
-
-                ci = 1.96 * np.std(mab_results, axis=0) / np.sqrt(self.nb_simulations)
-                mab_results = np.mean(mab_results, axis=0)
-                upper_bound = mab_results + ci
-                lower_bound = mab_results - ci
-
-            else:
-                # If a sim_num is given, we extract the mab results only for the asked simulation as a list
-                mab_results = results[sim_num][mab_index]
-                mab_results = np.cumsum(mab_results) / (np.arange(self.nb_iterations) + 1)
-
-            fig_2.add_trace(go.Scatter(x=list(range(len(mab_results))),
-                                       y=mab_results,
-                                       mode='lines',
-                                       name=self.mabs[mab_index].name,
-                                       line=dict(color=px.colors.qualitative.Plotly[mab_index])))
-
-            if (sim_num is None) and self.display_ci:
-                fig_2.add_trace(go.Scatter(x=list(range(len(mab_results))),
-                                           y=upper_bound,
-                                           mode='lines',
-                                           marker=dict(
-                                               color=hex_to_rgba(px.colors.qualitative.Plotly[mab_index], 0.2)),
-                                           line=dict(width=0),
-                                           showlegend=False))
-                fig_2.add_trace(go.Scatter(x=list(range(len(mab_results))),
-                                           y=lower_bound,
-                                           marker=dict(
-                                               color=hex_to_rgba(px.colors.qualitative.Plotly[mab_index], 0.2)),
-                                           line=dict(width=0),
-                                           mode='lines',
-                                           fillcolor=hex_to_rgba(px.colors.qualitative.Plotly[mab_index], 0.2),
-                                           fill='tonexty',
-                                           showlegend=False))
-            fig_2.update_layout(title_text=f"Average loading time at iteration : {self.n_iter}")
-            if self.show_plots and (sim_num is None):
-                fig_2.show()
 
         if sim_num is None:
             fig_path = os.path.join(self.plots_path, "aggregated")
@@ -202,8 +176,14 @@ class Simulation:
             if not os.path.exists(self.plots_path):
                 os.mkdir(self.plots_path)
             os.mkdir(fig_path)
-        fig.write_image(f"{fig_path}/cumulative_{self.n_iter}.png", scale=4)
-        fig_2.write_image(f"{fig_path}/average_{self.n_iter}.png", scale=4)
+        if 'Cumulative' in title:
+            fig.write_image(f"{fig_path}/cumulative_{self.n_iter}.png", scale=4)
+        elif 'Average' in title:
+            fig.write_image(f"{fig_path}/average_{self.n_iter}.png", scale=4)
+        elif 'Regrets' in title:
+            fig.write_image(f"{fig_path}/regrets_{self.n_iter}.png", scale=4)
+        else:
+            raise ValueError('Not a valid figure title name.')
 
     def plot_average_reward_per_arm(self) -> None:
         random_mab = self.mabs[0]
