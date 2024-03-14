@@ -175,7 +175,7 @@ class MultiArmedBandit:
         sampled_values = [arm.sample_prior() for arm in self.arms]
         best_arm_index = np.argmin(sampled_values)
         if self.use_synthetic_distributions:
-            regret = self.compute_regret(best_arm_index)
+            regret = self.compute_regret(best_arm_index, current_iteration)
             self.regrets.append(regret)
         observation = self.arms[best_arm_index].get_observation()
         if self.use_drift:
@@ -194,8 +194,7 @@ class MultiArmedBandit:
         self.arms[best_arm_index].update(observation)
         self.latencies.append(observation)
         if self.use_synthetic_distributions:
-            # TODO : modifier calcul du regret lorsqu'il y a du drift
-            regret = self.compute_regret(best_arm_index)
+            regret = self.compute_regret(best_arm_index, current_iteration)
             self.regrets.append(regret)
 
     def run_one_iteration_ucb(self, current_iteration: int) -> None:
@@ -207,7 +206,7 @@ class MultiArmedBandit:
         self.arms[best_arm_index].update(observation)
         self.latencies.append(observation)
         if self.use_synthetic_distributions:
-            regret = self.compute_regret(best_arm_index)
+            regret = self.compute_regret(best_arm_index, current_iteration)
             self.regrets.append(regret)
 
     def reset(self) -> None:
@@ -232,17 +231,18 @@ class MultiArmedBandit:
         for i, arm in enumerate(self.arms):
             arm.set_drift(drifts[i])
 
-    def compute_regret(self, chosen_arm_index: np.ndarray[int]) -> float:
+    def compute_regret(self, chosen_arm_index: np.ndarray[int], current_iteration: int) -> float:
         theoretical_params = [arm.theoretical_params for arm in self.arms]
         if None in theoretical_params:
             raise ValueError('theoretical_params is None, cannot compute regret')
         else:
             means = [param[0] for param in theoretical_params]
-
+            if self.use_drift:
+                means = [arm.apply_drift(means[i], current_iteration) for i, arm in enumerate(self.arms)]
             optimal_arm_index = np.argmin(means)
             chosen_arm_mean = means[chosen_arm_index]
             regret = chosen_arm_mean - means[optimal_arm_index]
             return regret
 
-    def compute_average_rewards_with_drift(self):
-        return [arm.drift.predict_drift(arm.theoretical_params) for arm in self.arms]
+    #def compute_rewards_average_with_drift(self):
+    #    return [arm.drift.predict_drift(arm.theoretical_params) for arm in self.arms]
