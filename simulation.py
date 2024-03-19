@@ -29,20 +29,12 @@ def main(cfg: DictConfig) -> None:
 
     mabs = []
     for alg in cfg.algorithms:
+
         if alg.type == 'unknown-mean-std-thompson-sampling':
             ts_arms = [UnknownMeanStdGaussianTSArm(initial_params=alg.initial_parameters,
                                                    path=paths[i],
-                                                   discount_factor=None) for i in range(len(paths))]
-            mabs.append(MultiArmedBandit(ts_arms,
-                                         name=alg.name,
-                                         type=alg.type,
-                                         use_synthetic_distributions=cfg.use_synthetic_distributions,
-                                         use_drift=cfg.use_drift))
-
-        elif alg.type == 'unknown-mean-std-discounted-thompson-sampling':
-            ts_arms = [UnknownMeanStdGaussianTSArm(initial_params=alg.initial_parameters,
-                                                   path=paths[i],
-                                                   discount_factor=alg.discount_factor) for i in range(len(paths))]
+                                                   discount_factor=alg.discount_factor,
+                                                   window_size=alg.window_size) for i in range(len(paths))]
             mabs.append(MultiArmedBandit(ts_arms,
                                          name=alg.name,
                                          type=alg.type,
@@ -52,17 +44,8 @@ def main(cfg: DictConfig) -> None:
         elif alg.type == 'unknown-mean-thompson-sampling':
             ts_arms = [UnknownMeanGaussianTSArm(initial_params=alg.initial_parameters,
                                                 path=paths[i],
-                                                discount_factor=None) for i in range(len(paths))]
-            mabs.append(MultiArmedBandit(ts_arms,
-                                         name=alg.name,
-                                         type=alg.type,
-                                         use_synthetic_distributions=cfg.use_synthetic_distributions,
-                                         use_drift=cfg.use_drift))
-
-        elif alg.type == 'unknown-mean-discounted-thompson-sampling':
-            ts_arms = [UnknownMeanGaussianTSArm(initial_params=alg.initial_parameters,
-                                                path=paths[i],
-                                                discount_factor=alg.discount_factor) for i in range(len(paths))]
+                                                discount_factor=alg.discount_factor,
+                                                window_size=alg.window_size) for i in range(len(paths))]
             mabs.append(MultiArmedBandit(ts_arms,
                                          name=alg.name,
                                          type=alg.type,

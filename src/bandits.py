@@ -38,12 +38,19 @@ class UnknownMeanStdGaussianTSArm(WikipediaArm):
     def __init__(self,
                  initial_params: List[float],
                  path: List[str],
-                 discount_factor: Union[float, None]) -> None:
+                 discount_factor: Union[float, None],
+                 window_size: Union[int, None]) -> None:
         WikipediaArm.__init__(self, path)
         self.initial_params = initial_params
         self.µ, self.v, self.α, self.β = self.initial_params
         self.var = self.β / (self.α + 1)
         self.discount_factor = discount_factor
+        self.window_size = window_size
+
+        if (self.discount_factor != 1) and (self.window_size is not None):
+            raise ValueError('Sliding window thompson sampling is not implemented with discount factor')
+
+        self.observation_values = []
 
     def sample_prior(self) -> float:
         precision = np.random.gamma(self.α, 1 / self.β)
@@ -60,6 +67,13 @@ class UnknownMeanStdGaussianTSArm(WikipediaArm):
             self.µ = (self.v * self.µ + observation) / (self.v + 1)
         else:
             self.µ = (self.v * self.µ * self.discount_factor + observation) / (self.v * self.discount_factor + 1)
+
+        self.observation_values.append(observation)
+        if self.window_size is not None:
+            # We only keep the information the last window_size observations
+            if len(self.observation_values) > self.window_size:
+                self.µ = np.mean(self.observation_values[-self.window_size:])
+
         self.v += 1
         self.α += 1 / 2
         self.β += (self.v / (self.v + 1)) * (((observation - self.µ) ** 2) / 2)
@@ -68,6 +82,7 @@ class UnknownMeanStdGaussianTSArm(WikipediaArm):
     def reset(self) -> None:
         self.µ, self.v, self.α, self.β = self.initial_params
         self.var = self.β / (self.α + 1)
+        self.observation_values = []
 
     def get_params(self) -> tuple[float, float]:
         return self.µ, self.var ** 0.5
@@ -78,30 +93,43 @@ class UnknownMeanGaussianTSArm(WikipediaArm):
     def __init__(self,
                  initial_params: List[float],
                  path: List[str],
-                 discount_factor: Union[float, None]) -> None:
+                 discount_factor: float,
+                 window_size: Union[int, None]) -> None:
         WikipediaArm.__init__(self, path)
         self.initial_params = initial_params
         self.discount_factor = discount_factor
+        self.window_size = window_size
+
+        if (self.discount_factor != 1) and (self.window_size is not None):
+            raise ValueError('Sliding window thompson sampling is not implemented with discount factor')
+
         self.μ, self.v = self.initial_params
         self.τ = 1 / self.v
         self.τ_0 = 0.0001  # the sum of all individual precisions
-        self.N = 0
+        self.observation_values = []
 
     def sample_prior(self):
         return np.random.normal(self.μ, np.sqrt(1 / self.τ_0))
 
-    def compute_posterior(self, x):
+    def compute_posterior(self, observation):
         if self.discount_factor is None:
-            self.μ = ((self.τ_0 * self.μ) + (self.τ * x)) / (self.τ_0 + self.τ)
-            self.τ_0 += self.τ
+            self.μ = ((self.τ_0 * self.μ) + (self.τ * observation)) / (self.τ_0 + self.τ)
         else:
-            self.μ = ((self.τ_0 * self.μ * self.discount_factor) + (self.τ * x)) / (self.τ_0 * self.discount_factor + self.τ)
-            self.τ_0 += self.τ
+            self.μ = ((self.τ_0 * self.μ * self.discount_factor) + (self.τ * observation)) / (self.τ_0 * self.discount_factor + self.τ)
+
+        self.observation_values.append(observation)
+        if self.window_size is not None:
+            # We only keep the information the last window_size observations
+            if len(self.observation_values) > self.window_size:
+                self.μ = np.mean(self.observation_values[-self.window_size:])
+
+        self.τ_0 += self.τ
 
     def reset(self) -> None:
         self.µ, self.v = self.initial_params
         self.τ = 1 / self.v
         self.τ_0 = 0.0001
+        self.observation_values = []
 
     def get_params(self) -> tuple[float, float]:
         return self.µ, self.v ** 0.5
@@ -174,10 +202,7 @@ class MultiArmedBandit:
             self.regrets = []
 
     def run_one_iteration(self, current_iteration: int) -> None:
-        if self.type in ['unknown-mean-std-thompson-sampling',
-                         'unknown-mean-thompson-sampling',
-                         'unknown-mean-std-discounted-thompson-sampling',
-                         'unknown-mean-discounted-thompson-sampling']:
+        if self.type in ['unknown-mean-std-thompson-sampling', 'unknown-mean-thompson-sampling']:
             self.run_one_iteration_thompson_sampling(current_iteration)
         elif self.type == 'epsilon-greedy':
             self.run_one_iteration_epsilon_greedy(current_iteration)

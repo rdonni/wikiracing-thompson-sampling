@@ -8,8 +8,8 @@ synthetic_data_config:
   max_std: 30
 
 # Drift config
-use_drift: True # Use drift or not
-drift_method: linear # If use_drift, the drift method to apply (among linear and brownian)
+use_drift: False # Use drift or not
+drift_method: brownian # If use_drift, the drift method to apply (among linear and brownian)
 
 # Graph configuration
 graph_path: ./graph.json # Graph localisation if not using synthetic data
@@ -21,7 +21,7 @@ max_num_paths: 100 # Maximum number of paths (for synthetic and real data)
 
 # Simulation configuration
 num_simulations: 20
-num_iters: 5000
+num_iters: 10000
 plots_path: ./plots
 results_path: ./results
 show_plots: False # Show plots during simulations or not (plots are saved in ./plots in all cases)
@@ -30,27 +30,34 @@ display_ci: True # Display confidence interval in aggregation plots or not
 # Algorithms to run during simulation
 algorithms:
   - type: unknown-mean-std-thompson-sampling
-    name: thompson-sampling-[ 0, 0, 1, 0.1]
+    name: NIG-TS-[ 0, 0, 1, 0.1]
     initial_parameters: [ 0, 0, 1, 0.1]
+    discount_factor: 1
+    window_size: null
 
-  - type: unknown-mean-std-discounted-thompson-sampling
-    name: discounted-thompson-sampling-[ 0, 0, 1, 0.1]-0.99
+  - type: unknown-mean-std-thompson-sampling
+    name: NIG-DTS-[ 0, 0, 1, 0.1]-0.99
     initial_parameters: [ 0, 0, 1, 0.1 ]
     discount_factor: 0.99
+    window_size: null
 
-  #- type: unknown-mean-thompson-sampling
-  #  name: thompson-sampling-[ 0, 900]
-  #  initial_parameters: [ 0, 900]
+  - type: unknown-mean-thompson-sampling
+    name: NORM-TS-[ 0, 900]
+    initial_parameters: [ 0, 900]
+    discount_factor: 1
+    window_size: null
 
-  #- type: unknown-mean-discounted-thompson-sampling
-  #  name: discounted-thompson-sampling-[ 0, 900]-0.99
-  #  initial_parameters: [ 0, 900 ]
-  #  discount_factor: 0.99
+  - type: unknown-mean-thompson-sampling
+    name: NORM-DTS-[ 0, 900]-0.98
+    initial_parameters: [ 0, 900 ]
+    discount_factor: 0.98
+    window_size: null
 
-  #- type: unknown-mean-discounted-thompson-sampling
-  #  name: discounted-thompson-sampling-[ 0, 900]-0.95
-  #  initial_parameters: [ 0, 900 ]
-  #  discount_factor: 0.95
+  - type: unknown-mean-thompson-sampling
+    name: NORM-SWTS-[ 0, 900]-20
+    initial_parameters: [ 0, 900]
+    discount_factor: 1
+    window_size: 20
 
   - type: ucb
     name: ucb-2
