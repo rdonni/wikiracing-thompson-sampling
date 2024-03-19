@@ -72,19 +72,26 @@ class UnknownMeanGaussianTSArm(WikipediaArm):
 
     def __init__(self,
                  initial_params: List[float],
-                 path: List[str]) -> None:
+                 path: List[str],
+                 discount_factor: Union[float, None]) -> None:
         WikipediaArm.__init__(self, path)
         self.initial_params = initial_params
+        self.discount_factor = discount_factor
         self.μ, self.v = self.initial_params
         self.τ = 1 / self.v
         self.τ_0 = 0.0001  # the sum of all individual precisions
+        self.N = 0
 
     def sample_prior(self):
         return np.random.normal(self.μ, np.sqrt(1 / self.τ_0))
 
     def compute_posterior(self, x):
-        self.μ = ((self.τ_0 * self.μ) + (self.τ * x)) / (self.τ_0 + self.τ)
-        self.τ_0 += self.τ
+        if self.discount_factor is None:
+            self.μ = ((self.τ_0 * self.μ) + (self.τ * x)) / (self.τ_0 + self.τ)
+            self.τ_0 += self.τ
+        else:
+            self.μ = ((self.τ_0 * self.μ * self.discount_factor) + (self.τ * x)) / (self.τ_0 * self.discount_factor + self.τ)
+            self.τ_0 += self.τ
 
     def reset(self) -> None:
         self.µ, self.v = self.initial_params
@@ -162,7 +169,9 @@ class MultiArmedBandit:
             self.regrets = []
 
     def run_one_iteration(self, current_iteration: int) -> None:
-        if self.type in ['unknown-mean-std-thompson-sampling', 'unknown-mean-thompson-sampling']:
+        if self.type in ['unknown-mean-std-thompson-sampling',
+                         'unknown-mean-thompson-sampling',
+                         'unknown-mean-discounted-thompson-sampling']:
             self.run_one_iteration_thompson_sampling(current_iteration)
         elif self.type == 'epsilon-greedy':
             self.run_one_iteration_epsilon_greedy(current_iteration)

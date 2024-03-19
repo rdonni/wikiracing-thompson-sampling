@@ -8,8 +8,8 @@ synthetic_data_config:
   max_std: 30
 
 # Drift config
-use_drift: False # Use drift or not
-drift_method: linear # If use_drift, the drift method to apply (among linear and brownian)
+use_drift: True # Use drift or not
+drift_method: brownian # If use_drift, the drift method to apply (among linear and brownian)
 
 graph_path: ./graph.json
 path_max_depth: 3
@@ -18,8 +18,8 @@ max_num_paths: 100
 start_node: Thompson sampling
 end_node: Albert Einstein
 
-num_simulations: 50
-num_iters: 15000
+num_simulations: 20
+num_iters: 5000
 plots_path: ./plots
 results_path: ./results
 show_plots: False
@@ -33,6 +33,16 @@ algorithms:
   - type: unknown-mean-thompson-sampling
     name: thompson-sampling-[ 0, 900]
     initial_parameters: [ 0, 900]
+
+  - type: unknown-mean-discounted-thompson-sampling
+    name: discounted-thompson-sampling-[ 0, 900]-0.99
+    initial_parameters: [ 0, 900 ]
+    discount_factor: 0.99
+
+  - type: unknown-mean-discounted-thompson-sampling
+    name: discounted-thompson-sampling-[ 0, 900]-0.95
+    initial_parameters: [ 0, 900 ]
+    discount_factor: 0.95
 
   - type: ucb
     name: ucb-2

@@ -20,6 +20,7 @@ def main(cfg: DictConfig) -> None:
         graph = json.loads(graph.read())
 
     # Extract all paths from start_node to end_node using depth-first-search algorithms
+    # TODO: Generate fake paths if data is synthetic
     paths = dfs(graph, cfg.start_node, cfg.end_node, max_depth=cfg.path_max_depth)[:cfg.max_num_paths]
     print(f"Found {len(paths)} paths between {cfg.start_node} and {cfg.end_node}, using max_depth={cfg.path_max_depth}")
 
@@ -36,7 +37,19 @@ def main(cfg: DictConfig) -> None:
 
         elif alg.type == 'unknown-mean-thompson-sampling':
             ts_arms = [UnknownMeanGaussianTSArm(initial_params=alg.initial_parameters,
-                                                path=paths[i]) for i in range(len(paths))]
+                                                path=paths[i],
+                                                discount_factor=None) for i in range(len(paths))]
+            mabs.append(MultiArmedBandit(ts_arms,
+                                         name=alg.name,
+                                         type=alg.type,
+                                         use_synthetic_distributions=cfg.use_synthetic_distributions,
+                                         use_drift=cfg.use_drift))
+
+        elif alg.type == 'unknown-mean-discounted-thompson-sampling':
+            print(alg)
+            ts_arms = [UnknownMeanGaussianTSArm(initial_params=alg.initial_parameters,
+                                                path=paths[i],
+                                                discount_factor=alg.discount_factor) for i in range(len(paths))]
             mabs.append(MultiArmedBandit(ts_arms,
                                          name=alg.name,
                                          type=alg.type,
