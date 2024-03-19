@@ -1,5 +1,5 @@
 # Synthetic data configuration
-use_synthetic_distributions: True
+use_synthetic_distributions: True # Use synthetic distribution or real distribution
 synthetic_data_config:
   min_mean: 500
   max_mean: 1500
@@ -9,40 +9,48 @@ synthetic_data_config:
 
 # Drift config
 use_drift: True # Use drift or not
-drift_method: brownian # If use_drift, the drift method to apply (among linear and brownian)
+drift_method: linear # If use_drift, the drift method to apply (among linear and brownian)
 
-graph_path: ./graph.json
-path_max_depth: 3
-max_num_paths: 100
+# Graph configuration
+graph_path: ./graph.json # Graph localisation if not using synthetic data
+path_max_depth: 3 # Maximal paths depth for dfs algorithm
+start_node: Thompson sampling # Dfs is searching for paths between start_node and end_node
+end_node: Albert Einstein # Both nodes must be in the graph
 
-start_node: Thompson sampling
-end_node: Albert Einstein
+max_num_paths: 100 # Maximum number of paths (for synthetic and real data)
 
+# Simulation configuration
 num_simulations: 20
 num_iters: 5000
 plots_path: ./plots
 results_path: ./results
-show_plots: False
-display_ci: True
+show_plots: False # Show plots during simulations or not (plots are saved in ./plots in all cases)
+display_ci: True # Display confidence interval in aggregation plots or not
 
+# Algorithms to run during simulation
 algorithms:
   - type: unknown-mean-std-thompson-sampling
     name: thompson-sampling-[ 0, 0, 1, 0.1]
     initial_parameters: [ 0, 0, 1, 0.1]
 
-  - type: unknown-mean-thompson-sampling
-    name: thompson-sampling-[ 0, 900]
-    initial_parameters: [ 0, 900]
-
-  - type: unknown-mean-discounted-thompson-sampling
-    name: discounted-thompson-sampling-[ 0, 900]-0.99
-    initial_parameters: [ 0, 900 ]
+  - type: unknown-mean-std-discounted-thompson-sampling
+    name: discounted-thompson-sampling-[ 0, 0, 1, 0.1]-0.99
+    initial_parameters: [ 0, 0, 1, 0.1 ]
     discount_factor: 0.99
 
-  - type: unknown-mean-discounted-thompson-sampling
-    name: discounted-thompson-sampling-[ 0, 900]-0.95
-    initial_parameters: [ 0, 900 ]
-    discount_factor: 0.95
+  #- type: unknown-mean-thompson-sampling
+  #  name: thompson-sampling-[ 0, 900]
+  #  initial_parameters: [ 0, 900]
+
+  #- type: unknown-mean-discounted-thompson-sampling
+  #  name: discounted-thompson-sampling-[ 0, 900]-0.99
+  #  initial_parameters: [ 0, 900 ]
+  #  discount_factor: 0.99
+
+  #- type: unknown-mean-discounted-thompson-sampling
+  #  name: discounted-thompson-sampling-[ 0, 900]-0.95
+  #  initial_parameters: [ 0, 900 ]
+  #  discount_factor: 0.95
 
   - type: ucb
     name: ucb-2
