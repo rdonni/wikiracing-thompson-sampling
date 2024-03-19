@@ -28,7 +28,18 @@ def main(cfg: DictConfig) -> None:
     for alg in cfg.algorithms:
         if alg.type == 'unknown-mean-std-thompson-sampling':
             ts_arms = [UnknownMeanStdGaussianTSArm(initial_params=alg.initial_parameters,
-                                                   path=paths[i]) for i in range(len(paths))]
+                                                   path=paths[i],
+                                                   discount_factor=None) for i in range(len(paths))]
+            mabs.append(MultiArmedBandit(ts_arms,
+                                         name=alg.name,
+                                         type=alg.type,
+                                         use_synthetic_distributions=cfg.use_synthetic_distributions,
+                                         use_drift=cfg.use_drift))
+
+        elif alg.type == 'unknown-mean-std-discounted-thompson-sampling':
+            ts_arms = [UnknownMeanStdGaussianTSArm(initial_params=alg.initial_parameters,
+                                                   path=paths[i],
+                                                   discount_factor=alg.discount_factor) for i in range(len(paths))]
             mabs.append(MultiArmedBandit(ts_arms,
                                          name=alg.name,
                                          type=alg.type,
@@ -46,7 +57,6 @@ def main(cfg: DictConfig) -> None:
                                          use_drift=cfg.use_drift))
 
         elif alg.type == 'unknown-mean-discounted-thompson-sampling':
-            print(alg)
             ts_arms = [UnknownMeanGaussianTSArm(initial_params=alg.initial_parameters,
                                                 path=paths[i],
                                                 discount_factor=alg.discount_factor) for i in range(len(paths))]

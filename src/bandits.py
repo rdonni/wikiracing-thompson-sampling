@@ -37,11 +37,13 @@ class WikipediaArm:
 class UnknownMeanStdGaussianTSArm(WikipediaArm):
     def __init__(self,
                  initial_params: List[float],
-                 path: List[str]) -> None:
+                 path: List[str],
+                 discount_factor: Union[float, None]) -> None:
         WikipediaArm.__init__(self, path)
         self.initial_params = initial_params
         self.µ, self.v, self.α, self.β = self.initial_params
         self.var = self.β / (self.α + 1)
+        self.discount_factor = discount_factor
 
     def sample_prior(self) -> float:
         precision = np.random.gamma(self.α, 1 / self.β)
@@ -54,7 +56,10 @@ class UnknownMeanStdGaussianTSArm(WikipediaArm):
 
     def compute_posterior(self, observation: float) -> None:
         # TODO: intégrer la loi log normale
-        self.µ = (self.v * self.µ + observation) / (self.v + 1)
+        if self.discount_factor is None:
+            self.µ = (self.v * self.µ + observation) / (self.v + 1)
+        else:
+            self.µ = (self.v * self.µ * self.discount_factor + observation) / (self.v * self.discount_factor + 1)
         self.v += 1
         self.α += 1 / 2
         self.β += (self.v / (self.v + 1)) * (((observation - self.µ) ** 2) / 2)
@@ -171,6 +176,7 @@ class MultiArmedBandit:
     def run_one_iteration(self, current_iteration: int) -> None:
         if self.type in ['unknown-mean-std-thompson-sampling',
                          'unknown-mean-thompson-sampling',
+                         'unknown-mean-std-discounted-thompson-sampling',
                          'unknown-mean-discounted-thompson-sampling']:
             self.run_one_iteration_thompson_sampling(current_iteration)
         elif self.type == 'epsilon-greedy':
