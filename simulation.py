@@ -19,9 +19,12 @@ def main(cfg: DictConfig) -> None:
     with open(cfg.graph_path) as graph:
         graph = json.loads(graph.read())
 
-    # Extract all paths from start_node to end_node using depth-first-search algorithms
-    # TODO: Generate fake paths if data is synthetic
-    paths = dfs(graph, cfg.start_node, cfg.end_node, max_depth=cfg.path_max_depth)[:cfg.max_num_paths]
+    if cfg.use_synthetic_distributions:
+        # If synthetic data is used, we don't use dfs but just generate cfg.max_num_paths fake paths
+        paths = [[str(i)] for i in range(cfg.max_num_paths)]
+    else:
+        # Extract all paths from start_node to end_node using depth-first-search algorithms
+        paths = dfs(graph, cfg.start_node, cfg.end_node, max_depth=cfg.path_max_depth)[:cfg.max_num_paths]
     print(f"Found {len(paths)} paths between {cfg.start_node} and {cfg.end_node}, using max_depth={cfg.path_max_depth}")
 
     mabs = []
