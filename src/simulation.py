@@ -80,6 +80,15 @@ class Simulation:
         if self.use_synthetic_distributions:
             self.generate_plots(average_regrets, 'Regrets')
 
+        # Additional zoomed plots to better distinguish results (we only extract last 100 values)
+        cumulative_latencies = {num_iter: cum[:, -100:] for num_iter, cum in cumulative_latencies.items()}
+        average_latencies = {num_iter: avg[:, -100:] for num_iter, avg in average_latencies.items()}
+        self.generate_plots(cumulative_latencies, 'Zoomed cumulative loading time')
+        self.generate_plots(average_latencies, 'Zoomed average loading time')
+        if self.use_synthetic_distributions:
+            average_regrets = {num_iter: reg[:, -100:] for num_iter, reg in average_regrets.items()}
+            self.generate_plots(average_regrets, 'Zoomed regrets')
+
         # Save results as a json file
         if not os.path.exists(self.results_path):
             os.mkdir(self.results_path)
@@ -140,7 +149,7 @@ class Simulation:
                                      y=mab_results,
                                      mode='lines',
                                      name=self.mabs[mab_index].name,
-                                     line=dict(color=px.colors.qualitative.Plotly[mab_index])))
+                                     line=dict(color=px.colors.qualitative.Plotly[mab_index], width=1)))
 
             if (sim_num is None) and self.display_ci:
                 fig.add_trace(go.Scatter(x=list(range(len(mab_results))),
@@ -175,6 +184,12 @@ class Simulation:
             fig.write_image(f"{fig_path}/average_{self.n_iter}.png", scale=4)
         elif 'Regrets' in title:
             fig.write_image(f"{fig_path}/regrets_{self.n_iter}.png", scale=4)
+        elif 'Zoomed cumulative' in title:
+            fig.write_image(f"{fig_path}/zoomed_cumulative_{self.n_iter}.png", scale=4)
+        elif 'Zoomed average' in title:
+            fig.write_image(f"{fig_path}/zoomed_average_{self.n_iter}.png", scale=4)
+        elif 'Zoomed regrets' in title:
+            fig.write_image(f"{fig_path}/zoomed_regrets_{self.n_iter}.png", scale=4)
         else:
             raise ValueError('Not a valid figure title name.')
 
