@@ -38,7 +38,7 @@ class UnknownMeanStdGaussianTSArm(WikipediaArm):
     def __init__(self,
                  initial_params: List[float],
                  path: List[str],
-                 discount_factor: Union[float, None],
+                 discount_factor: float,
                  window_size: Union[int, None]) -> None:
         WikipediaArm.__init__(self, path)
         self.initial_params = initial_params
@@ -62,15 +62,11 @@ class UnknownMeanStdGaussianTSArm(WikipediaArm):
         return sample
 
     def compute_posterior(self, observation: float) -> None:
-        # TODO: intégrer la loi log normale
-        if self.discount_factor is None:
-            self.µ = (self.v * self.µ + observation) / (self.v + 1)
-        else:
-            self.µ = (self.v * self.µ * self.discount_factor + observation) / (self.v * self.discount_factor + 1)
+        self.µ = (self.v * self.µ * self.discount_factor + observation) / ((self.v + 1) * self.discount_factor)
 
         self.observation_values.append(observation)
         if self.window_size is not None:
-            # We only keep the information the last window_size observations
+            # We only keep the information from the last window_size observations
             if len(self.observation_values) > self.window_size:
                 self.µ = np.mean(self.observation_values[-self.window_size:])
 
@@ -112,14 +108,12 @@ class UnknownMeanGaussianTSArm(WikipediaArm):
         return np.random.normal(self.μ, np.sqrt(1 / self.τ_0))
 
     def compute_posterior(self, observation):
-        if self.discount_factor is None:
-            self.μ = ((self.τ_0 * self.μ) + (self.τ * observation)) / (self.τ_0 + self.τ)
-        else:
-            self.μ = ((self.τ_0 * self.μ * self.discount_factor) + (self.τ * observation)) / (self.τ_0 * self.discount_factor + self.τ)
+
+        self.μ = ((self.τ_0 * self.μ * self.discount_factor) + (self.τ * observation)) / ((self.τ_0 + self.τ) * self.discount_factor)
 
         self.observation_values.append(observation)
         if self.window_size is not None:
-            # We only keep the information the last window_size observations
+            # We only keep the information from the last window_size observations
             if len(self.observation_values) > self.window_size:
                 self.μ = np.mean(self.observation_values[-self.window_size:])
 
