@@ -25,13 +25,23 @@ Page load times can vary greatly depending on the size of the page and the docum
 
 It's also worth noting that the loading time for each article varies considerably. This is all the more true for a path made up of several articles. Finding the fastest path while minimising total latency therefore requires appropriate algorithms.
 
+## Drifting reward problem
+This repository also allows the integration of an artificial drift of the rewards associated with each arm, in order to model large variations in traffic on article pages, leading to significant changes in loading time. 
+
+This framework is generally referred to as non-stationary bandits. 
+
+For the moment, this repository supports two drift methods:
+- linear drift
+- brownian drift
+
 ## 🛠️ Implemented algorithms : 
 Here are the algorithms currently implemented:
 - epsilon greedy
-- UCB 
-- Thompson Sampling (Normal Inverse Gamma Prior for a Gaussian Likelihood)
-- Sliding Window Thompson Sampling
-- Discounted Thompson Sampling 
+- UCB
+- Thompson Sampling with Gaussian Prior (when standard deviations of the arms are known)
+- Thompson Sampling with Normal Inverse Gamma Prior (when neither means and standard deviations of the arms are known)
+- Sliding Window Thompson Sampling (for non-stationary bandits problem)
+- Discounted Thompson Sampling (for non-stationary bandits problem)
 
 
 ## ▶️ To run the code
