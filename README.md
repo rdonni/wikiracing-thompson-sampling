@@ -29,7 +29,9 @@ It's also worth noting that the loading time for each article varies considerabl
 Here are the algorithms currently implemented:
 - epsilon greedy
 - UCB 
-- Thompson Sampling (Normal Inverse Gamma Prior for a Gaussian Likelihood) 
+- Thompson Sampling (Normal Inverse Gamma Prior for a Gaussian Likelihood)
+- Sliding Window Thompson Sampling
+- Discounted Thompson Sampling 
 
 
 ## ▶️ To run the code
